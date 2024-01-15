@@ -50,7 +50,7 @@ madori_list = [
     '2DK', '2LDK', '3DK', '3SDK', '2K', '3K', '3LDK', '4K', '4LDK',
     '2SLDK', '3SLDK', '4SK', '3SK', '2SDK', '2SK', '4SLDK'
     ]
-col1, col2, col3 = st.columns([5,1,1])
+col1, col2, col3 = st.columns([9,2,2])
 with col2:
     st.button('会員登録', type='secondary')
 with col3:
