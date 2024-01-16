@@ -48,7 +48,7 @@ madori_list = [
     ]
 
 # 会員登録・Loginボタンを画面右上に配置
-col1, col2, col3 = st.columns([5,1,1])
+col1, col2, col3 = st.columns([9,2,2])
 with col2:
     st.button('会員登録', type='secondary')
 with col3:
