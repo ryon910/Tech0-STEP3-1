@@ -118,84 +118,84 @@ if btn_search == True:
 if st.session_state['button1_clicked'] == True:
 
     # 検索条件でデータを絞り込み、結果を df_search に代入
-    df_search = df.query(f'(access1_station == {station_select}) and ({min_rent_yen} <= rent <= {max_rent_yen}) and ({min_walk_time} <= access1_walk <= {max_walk_time}) and (madori == {madori_select}) and ({min_age} <= age <= {max_age})  and ({min_menseki} <= menseki <= {max_menseki})')
-    # 検索結果のヒット件数を取得
-    hit = len(df_search)
+    try:
+        df_search = df.query(f'(access1_station == {station_select}) and ({min_rent_yen} <= rent <= {max_rent_yen}) and ({min_walk_time} <= access1_walk <= {max_walk_time}) and (madori == {madori_select}) and ({min_age} <= age <= {max_age})  and ({min_menseki} <= menseki <= {max_menseki})')
+        # 検索結果のヒット件数を取得
+        hit = len(df_search)
+        # 緯度・経度は欠損値を含むため、map用に緯度あるいは経度に欠損値のあるレコードを削除したものを df_search_drop に代入
+        df_search_drop = df_search.dropna(subset=['latitude', 'longitude'])
 
-    # 緯度・経度は欠損値を含むため、map用に緯度あるいは経度に欠損値のあるレコードを削除したものを df_search_drop に代入
-    df_search_drop = df_search.dropna(subset=['latitude', 'longitude'])
+        # 地図を作成。地図の初期中央位置は df_search_drop の緯度・経度の平均値。
+        m = folium.Map(location = [df_search_drop['latitude'].mean(), df_search_drop['longitude'].mean()], zoom_start=13)
 
-    # 地図を作成。地図の初期中央位置は df_search_drop の緯度・経度の平均値。
-    m = folium.Map(location = [df_search_drop['latitude'].mean(), df_search_drop['longitude'].mean()], zoom_start=13)
+        # 地図にDataFrame内の各位置のマーカーを追加
+        for index, row in df_search_drop.iterrows():
+            google_maps_url = f"https://www.google.com/maps/search/?api=1&query={row['latitude']},{row['longitude']}"
+            popup_html = f'<a href="{google_maps_url}" target="_blank">Google Mapsで開く</a>'
+            popup = folium.Popup(f"id：{row['id']}<br>物件名：{row['name']}<br>家賃：{row['rent']}円<br>間取り：{row['madori']}・{row['menseki']}m2<br>{popup_html}", max_width=300)
+            folium.Marker(
+                location=[row['latitude'], row['longitude']],
+                popup = popup
+            ).add_to(m)
+        # df_searchのカラム名を全て日本語に直す
+        df_search.columns = ['id','物件名', '住所', '築年数', '構造', '階数', '賃料(円)', '管理費(円)', '敷金(円)', '礼金(円)', '間取り', '占有面積(m2)', '最寄駅路線1', '最寄駅1', '駅徒歩1(分)', '最寄駅路線2', '最寄駅2', '駅徒歩2(分)', '最寄駅路線3', '最寄駅3', '駅徒歩3(分)', '緯度', '経度','物件画像URL','間取り画像URL','詳細情報URL' ]
 
-    # 地図にDataFrame内の各位置のマーカーを追加
-    for index, row in df_search_drop.iterrows():
-        google_maps_url = f"https://www.google.com/maps/search/?api=1&query={row['latitude']},{row['longitude']}"
-        popup_html = f'<a href="{google_maps_url}" target="_blank">Google Mapsで開く</a>'
-        popup = folium.Popup(f"id：{row['id']}<br>物件名：{row['name']}<br>家賃：{row['rent']}円<br>間取り：{row['madori']}・{row['menseki']}m2<br>{popup_html}", max_width=300)
-        folium.Marker(
-            location=[row['latitude'], row['longitude']],
-            popup = popup
-        ).add_to(m)
+        # Folium地図をStreamlitに表示
+        map_html = m._repr_html_()
 
-    # df_searchのカラム名を全て日本語に直す
-    df_search.columns = ['id','物件名', '住所', '築年数', '構造', '階数', '賃料(円)', '管理費(円)', '敷金(円)', '礼金(円)', '間取り', '占有面積(m2)', '最寄駅路線1', '最寄駅1', '駅徒歩1(分)', '最寄駅路線2', '最寄駅2', '駅徒歩2(分)', '最寄駅路線3', '最寄駅3', '駅徒歩3(分)', '緯度', '経度','物件画像URL','間取り画像URL','詳細情報URL' ]
-
-    # Folium地図をStreamlitに表示
-    map_html = m._repr_html_()
-
-    # 以下、検索結果
-    st.write('■ 検索結果')
-    st.write(f'▼ ヒット件数：{hit}件')
-    st.write('▼ 物件一覧：')
-    # 検索結果のDataFrameとCSVダウンロードボタンを設置
-    st.dataframe(df_search, height=300)
-    st.download_button(label='Download CSV', data=df_search.to_csv(index=False), file_name='build_list', mime='text/csv')
-    st.markdown("---")
-    # 以下、マップの情報
-    st.write('▼ マップ：')
-    components.html(map_html, height=400)
-    st.write('※位置情報の取得に失敗した物件は表示されていません。')
-    st.markdown("---")
-
-#-----------------------------------------メイン画面２(詳細)-----------------------------------------
-    # 物件idを入力すると、外観や間取りを確認できるようにする。まず、df_detailに入力したidのDataFrameを代入。
-    st.write('▼詳細情報：')
-    id_input_str = st.text_input('物件のidを入力してください')
-    # ボタン２(確認ボタン）を押すとボタン２セッションがTrueに。一度クリックされたセッションはTrueに維持される。
-    if st.button('確認') == True:
-        st.session_state['button2_clicked'] = True
-    # ボタン2（確認ボタン）がクリックされた状態（ボタン２セッションがTrue）の場合の処理を実行
-    if st.session_state['button2_clicked'] == True:
-        #未入力の場合、idが存在しない場合は先に進まず、idが存在する場合のみ、先の処理を実行。
-        if not id_input_str:
-            st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
-        elif int(id_input_str) < 0:
-            st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
-        elif int(len(df)) < int(id_input_str):
-            st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
-        else:
-            try:
-                id_input = int(id_input_str)
-                df_detail = df[df['id'] == id_input]
-                df_detail.columns = ['id','物件名', '住所', '築年数', '構造', '階数', '賃料(円)', '管理費(円)', '敷金(円)', '礼金(円)', '間取り', '占有面積(m2)', '最寄駅路線1', '最寄駅1', '駅徒歩1(分)', '最寄駅路線2', '最寄駅2', '駅徒歩2(分)', '最寄駅路線3', '最寄駅3', '駅徒歩3(分)', '緯度', '経度','物件画像URL','間取り画像URL','詳細情報URL' ]
-                # 物件の情報一覧
-                st.dataframe(df_detail)
-                # 縦2列に外観画像と間取り画像を配置する。画像は存在しないものもあるため、例外処理を用意しておく。
-                col1, col2 = st.columns([1, 1])
-                with col1:
-                    try:
-                        st.image(df_detail['物件画像URL'].to_list()[0], use_column_width='auto',caption='物件の外観')
-                    except Exception as e:
-                        st.write('外観の画像がありません')
-                with col2:
-                    try:
-                        st.image(df_detail['間取り画像URL'].to_list()[0], use_column_width='auto', caption='間取り')
-                    except Exception as e:
-                        st.write('間取りの画像がありません')
-                st.markdown("---")
-                #SUUMOで確認できるようにリンクを設置
-                st.write('▼賃貸情報サイトから問い合わせる：')
-                st.write(df_detail["詳細情報URL"].to_list()[0])
-            except Exception as e:
-                st.write('待機中...')
+        # 以下、検索結果
+        st.write('■ 検索結果')
+        st.write(f'▼ ヒット件数：{hit}件')
+        st.write('▼ 物件一覧：')
+        # 検索結果のDataFrameとCSVダウンロードボタンを設置
+        st.dataframe(df_search, height=300)
+        st.download_button(label='Download CSV', data=df_search.to_csv(index=False), file_name='build_list', mime='text/csv')
+        st.markdown("---")
+        # 以下、マップの情報
+        st.write('▼ マップ：')
+        components.html(map_html, height=400)
+        st.write('※位置情報の取得に失敗した物件は表示されていません。')
+        st.markdown("---")
+        #-----------------------------------------メイン画面２(詳細)-----------------------------------------
+        # 物件idを入力すると、外観や間取りを確認できるようにする。まず、df_detailに入力したidのDataFrameを代入。
+        st.write('▼詳細情報：')
+        id_input_str = st.text_input('物件のidを入力してください')
+        # ボタン２(確認ボタン）を押すとボタン２セッションがTrueに。一度クリックされたセッションはTrueに維持される。
+        if st.button('確認') == True:
+            st.session_state['button2_clicked'] = True
+        # ボタン2（確認ボタン）がクリックされた状態（ボタン２セッションがTrue）の場合の処理を実行
+        if st.session_state['button2_clicked'] == True:
+            #未入力の場合、idが存在しない場合は先に進まず、idが存在する場合のみ、先の処理を実行。
+            if not id_input_str:
+                st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
+            elif int(id_input_str) < 0:
+                st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
+            elif int(len(df)) < int(id_input_str):
+                st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
+            else:
+                try:
+                    id_input = int(id_input_str)
+                    df_detail = df[df['id'] == id_input]
+                    df_detail.columns = ['id','物件名', '住所', '築年数', '構造', '階数', '賃料(円)', '管理費(円)', '敷金(円)', '礼金(円)', '間取り', '占有面積(m2)', '最寄駅路線1', '最寄駅1', '駅徒歩1(分)', '最寄駅路線2', '最寄駅2', '駅徒歩2(分)', '最寄駅路線3', '最寄駅3', '駅徒歩3(分)', '緯度', '経度','物件画像URL','間取り画像URL','詳細情報URL' ]
+                    # 物件の情報一覧
+                    st.dataframe(df_detail)
+                    # 縦2列に外観画像と間取り画像を配置する。画像は存在しないものもあるため、例外処理を用意しておく。
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        try:
+                            st.image(df_detail['物件画像URL'].to_list()[0], use_column_width='auto',caption='物件の外観')
+                        except Exception as e:
+                            st.write('外観の画像がありません')
+                    with col2:
+                        try:
+                            st.image(df_detail['間取り画像URL'].to_list()[0], use_column_width='auto', caption='間取り')
+                        except Exception as e:
+                            st.write('間取りの画像がありません')
+                    st.markdown("---")
+                    #SUUMOで確認できるようにリンクを設置
+                    st.write('▼賃貸情報サイトから問い合わせる：')
+                    st.write(df_detail["詳細情報URL"].to_list()[0])
+                except Exception as e:
+                    st.write('待機中...')
+    except Exception as e:
+        st.write('条件が未入力の項目があります。')
