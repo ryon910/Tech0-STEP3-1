@@ -167,11 +167,11 @@ if st.session_state['button1_clicked'] == True:
         if st.session_state['button2_clicked'] == True:
             #未入力の場合、idが存在しない場合は先に進まず、idが存在する場合のみ、先の処理を実行。
             if not id_input_str:
-                st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
+                st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
             elif int(id_input_str) < 0:
-                st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
-            elif int(len(df)) < int(id_input_str):
-                st.write(f'idが存在しません。0-{len(df)}の間で入力してください。')
+                st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
+            elif int(len(df))-1 < int(id_input_str):
+                st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
             else:
                 try:
                     id_input = int(id_input_str)
