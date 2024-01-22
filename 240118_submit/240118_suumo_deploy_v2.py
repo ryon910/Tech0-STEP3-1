@@ -168,11 +168,7 @@ if st.session_state['button1_clicked'] == True:
             #未入力の場合、idが存在しない場合は先に進まず、idが存在する場合のみ、先の処理を実行。
             if not id_input_str:
                 st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
-            elif int(id_input_str) < 0:
-                st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
-            elif int(len(df))-1 < int(id_input_str):
-                st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
-            else:
+            elif 0 <= int(id_input_str) <= int(len(df))-1:
                 try:
                     id_input = int(id_input_str)
                     df_detail = df[df['id'] == id_input]
@@ -197,5 +193,7 @@ if st.session_state['button1_clicked'] == True:
                     st.write(df_detail["詳細情報URL"].to_list()[0])
                 except Exception as e:
                     st.write('待機中...')
+            else:
+                st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
     except Exception as e:
-        st.write('条件が未入力の項目があります。')
+        st.write('条件に未入力の項目があるか、条件に一致する物件がありません。')
