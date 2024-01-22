@@ -166,27 +166,30 @@ if st.session_state['button1_clicked'] == True:
         # ボタン2（確認ボタン）がクリックされた状態（ボタン２セッションがTrue）の場合の処理を実行
         if st.session_state['button2_clicked'] == True:
             try:
-                id_input = int(id_input_str)
-                df_detail = df[df['id'] == id_input]
-                df_detail.columns = ['id','物件名', '住所', '築年数', '構造', '階数', '賃料(円)', '管理費(円)', '敷金(円)', '礼金(円)', '間取り', '占有面積(m2)', '最寄駅路線1', '最寄駅1', '駅徒歩1(分)', '最寄駅路線2', '最寄駅2', '駅徒歩2(分)', '最寄駅路線3', '最寄駅3', '駅徒歩3(分)', '緯度', '経度','物件画像URL','間取り画像URL','詳細情報URL' ]
-                # 物件の情報一覧
-                st.dataframe(df_detail)
-                # 縦2列に外観画像と間取り画像を配置する。画像は存在しないものもあるため、例外処理を用意しておく。
-                col1, col2 = st.columns([1, 1])
-                with col1:
-                    try:
-                        st.image(df_detail['物件画像URL'].to_list()[0], use_column_width='auto',caption='物件の外観')
-                    except Exception as e:
-                        st.write('外観の画像がありません')
-                with col2:
-                    try:
-                        st.image(df_detail['間取り画像URL'].to_list()[0], use_column_width='auto', caption='間取り')
-                    except Exception as e:
-                        st.write('間取りの画像がありません')
-                st.markdown("---")
-                #SUUMOで確認できるようにリンクを設置
-                st.write('▼賃貸情報サイトから問い合わせる：')
-                st.write(df_detail["詳細情報URL"].to_list()[0])
+                if 0 <= int(id_input_str) <= int(len(df))-1:
+                    id_input = int(id_input_str)
+                    df_detail = df[df['id'] == id_input]
+                    df_detail.columns = ['id','物件名', '住所', '築年数', '構造', '階数', '賃料(円)', '管理費(円)', '敷金(円)', '礼金(円)', '間取り', '占有面積(m2)', '最寄駅路線1', '最寄駅1', '駅徒歩1(分)', '最寄駅路線2', '最寄駅2', '駅徒歩2(分)', '最寄駅路線3', '最寄駅3', '駅徒歩3(分)', '緯度', '経度','物件画像URL','間取り画像URL','詳細情報URL' ]
+                    # 物件の情報一覧
+                    st.dataframe(df_detail)
+                    # 縦2列に外観画像と間取り画像を配置する。画像は存在しないものもあるため、例外処理を用意しておく。
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        try:
+                            st.image(df_detail['物件画像URL'].to_list()[0], use_column_width='auto',caption='物件の外観')
+                        except Exception as e:
+                            st.write('外観の画像がありません')
+                    with col2:
+                        try:
+                            st.image(df_detail['間取り画像URL'].to_list()[0], use_column_width='auto', caption='間取り')
+                        except Exception as e:
+                            st.write('間取りの画像がありません')
+                    st.markdown("---")
+                    #SUUMOで確認できるようにリンクを設置
+                    st.write('▼賃貸情報サイトから問い合わせる：')
+                    st.write(df_detail["詳細情報URL"].to_list()[0])
+                else:
+                    st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
             except Exception as e:
                 st.write(f'idが存在しません。0-{str(int(len(df))-1)}の間で入力してください。')
     except Exception as e:
