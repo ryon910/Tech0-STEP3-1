@@ -87,9 +87,6 @@ min_menseki, max_menseki = st.sidebar.slider(
     max_value = 150,
     value = (0, 75))
 
-# 検索ボタンを設置
-btn_search = st.sidebar.button('検索',type = 'primary')
-
 #-----------------------------------------ボタン類-----------------------------------------
 # 会員登録・Loginボタンを画面右上に配置
 col1, col2, col3 = st.columns([9,2,2])
@@ -111,6 +108,8 @@ if 'button1_clicked' not in st.session_state:
 if 'button2_clicked' not in st.session_state:
     st.session_state['button2_clicked'] = False
 
+# 検索ボタンを設置
+btn_search = st.sidebar.button('検索',type = 'primary')
 # ボタン1(検索ボタン）を押すとボタン１セッションがTrueに。一度クリックされたセッションはTrueに維持される。
 if btn_search == True:
     st.session_state['button1_clicked'] = True
@@ -161,7 +160,9 @@ if st.session_state['button1_clicked'] == True:
         st.write('▼詳細情報：')
         id_input_str = st.text_input('物件のidを入力してください。コンマなし、半角数字でお願いします。')
         # ボタン２(確認ボタン）を押すとボタン２セッションがTrueに。一度クリックされたセッションはTrueに維持される。
-        if st.button('確認') == True:
+        # 確認ボタンを設置
+        btn_check = st.button('確認',type = 'primary')
+        if btn_check == True:
             st.session_state['button2_clicked'] = True
         # ボタン2（確認ボタン）がクリックされた状態（ボタン２セッションがTrue）の場合の処理を実行
         if st.session_state['button2_clicked'] == True:
