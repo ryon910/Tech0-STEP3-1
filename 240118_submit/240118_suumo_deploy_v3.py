@@ -151,7 +151,7 @@ if st.session_state['button1_clicked'] == True:
         st.write('▼詳細情報：')
         for i in range(0, len(df_search)):
             name = df_search.iloc[i]['name']
-            address = df_search.iloc[i]['name']
+            address = df_search.iloc[i]['address']
             age = df_search.iloc[i]['age']
             structure = df_search.iloc[i]['structure']
             build_img_url = df_search.iloc[i]['build_img_url']
